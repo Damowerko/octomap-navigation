@@ -2,31 +2,28 @@
 #include <tuple>
 #include <array>
 #include <queue>
-#include "octomap-navigation/utils.hpp"
-
-using namespace std;
-
-
+#include <octomap/octomap.h>
+#include <octomap/OcTree.h>
 
 template<class T>
 class Graph {
 public:
-    virtual vector<T> neighbors(T node);
+    virtual std::vector<T> neighbors(T node);
     virtual float cost(T node1, T node2);
 };
 
-typedef array<size_t, 3> coordinate;
+typedef std::array<size_t, 3> coordinate;
 
 class GridGraph : Graph<coordinate> {
 public:
-    GridGraph(coordinate size, vector<bool> data) : size(size), data(data) {}
+    GridGraph(coordinate size, std::vector<bool> data) : size(size), data(data) {}
 
-    vector<coordinate> neighbors(coordinate node){
+    std::vector<coordinate> neighbors(coordinate node){
         // TODO: Implement        
     }
 private:
     coordinate size;
-    vector<bool> data;
+    std::vector<bool> data;
 };
 
 /**
