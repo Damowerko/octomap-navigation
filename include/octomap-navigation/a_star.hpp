@@ -17,9 +17,9 @@ public:
 
 typedef array<size_t, 3> coordinate;
 
-class Grid3 : Graph<coordinate> {
+class GridGraph : Graph<coordinate> {
 public:
-    Grid3(coordinate size, vector<bool> data) : size(size), data(data) {}
+    GridGraph(coordinate size, vector<bool> data) : size(size), data(data) {}
 
     vector<coordinate> neighbors(coordinate node){
         // TODO: Implement        
