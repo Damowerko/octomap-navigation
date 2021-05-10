@@ -3,3 +3,6 @@ build/
 
 # IDE
 .vscode/
+
+# Dependencies
+vcpkg_installed/
