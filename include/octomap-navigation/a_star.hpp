@@ -4,11 +4,21 @@
 #include <array>
 #include <queue>
 
+class Node {
+public:
+    void set_f_score() {
+        f_score = f_score + g_score;
+    }
+
+    Node& parent;
+    float f_score, g_score, h_score = numeric_limits<float>::infinity();
+};
+
 template <class T>
 class Graph
 {
 public:
-    virtual std::vector<T> neighbors(T node);
+    virtual std::vector<T> neighbors(const T& node);
 };
 
 /**
