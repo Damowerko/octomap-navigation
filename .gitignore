@@ -1,6 +1,9 @@
 # C++
 build/
 
+# Output dri
+out/
+
 # IDE
 .vscode/
 .DS_Store
