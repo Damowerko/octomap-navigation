@@ -3,7 +3,7 @@
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 
-inline octomap::OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int level);
+octomap::OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth);
 
 /**
  * @brief The data structure that describe the nodes of a OctoGraph.
@@ -18,11 +18,13 @@ public:
      * @param key A unique key indentifying the node. Make sure you call makeKeyUnique.
      * @param depth The depth of the node. The tree's root is at depth zero.
      */
-    // OctoNode();
-
     OctoNode(octomap::OcTreeKey key, int depth) : key(key), Node(), depth(depth)
     {
         assert((key == makeKeyUnique(key, depth)));
+    };
+
+    bool operator==(const OctoNode& other) const {
+        return key == other.key && depth == other.depth;
     };
 
     octomap::OcTreeKey key;

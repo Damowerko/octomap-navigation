@@ -11,6 +11,21 @@ inline void changeDepth(OcTreeKey &key, int diff);
 tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth = false);
 pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const OcTreeKey &key, unsigned int depth);
 
+
+namespace std {
+    /**
+     * @brief OctoNode std::hash class specialization. 
+     */
+    template<>
+    class hash<OctoNode>{
+    public:
+        std::size_t operator()(const OctoNode& node){
+            static OcTreeKey::KeyHash keyHash;
+            return keyHash(node.key) + 241 * node.depth;
+        }
+    };
+}
+
 vector<OctoNode> OctoGraphGrid::neighbors(const OctoNode &node)
 {
     vector<OctoNode> neighbors;
@@ -81,7 +96,7 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
     return neighbors;
 };
 
-inline OcTreeKey &makeKeyUnique(OcTreeKey &key, unsigned int depth)
+OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth)
 {
     unsigned int level = 16 - depth;
     if (level != 0)
