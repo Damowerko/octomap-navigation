@@ -21,6 +21,76 @@ using std::vector;
 
 using namespace octomap;
 
+void Visualizer::visualize(const OctoGraph &graph, const std::vector<OctoNode> &path)
+{
+
+    vector<double> x;
+    vector<double> y;
+    vector<double> z;
+
+    vector<double> xp;
+    vector<double> yp;
+    vector<double> zp;
+    for (auto p : path)
+    {
+        xp.push_back(graph.octree.keyToCoord(p.key).x());
+        yp.push_back(graph.octree.keyToCoord(p.key).y());
+        zp.push_back(graph.octree.keyToCoord(p.key).z());
+    }
+
+    //
+    for (auto it = graph.octree.begin_leafs(); it != graph.octree.end_leafs(); ++it)
+    {
+        if (graph.octree.isNodeOccupied(graph.octree.search(it.getIndexKey())))
+        {
+            double sz = it.getSize();
+            x.push_back(it.getX());
+            y.push_back(it.getY());
+            z.push_back(it.getZ());
+
+            x.push_back(it.getX() + sz / 2);
+            y.push_back(it.getY() + sz / 2);
+            z.push_back(it.getZ() + sz / 2);
+
+            x.push_back(it.getX() - sz / 2);
+            y.push_back(it.getY() - sz / 2);
+            z.push_back(it.getZ() - sz / 2);
+        }
+    }
+
+    std::unique_ptr<matlab::engine::MATLABEngine> mlp = matlab::engine::startMATLAB();
+    matlab::data::ArrayFactory f;
+
+    matlab::data::Array x_arr = f.createArray({x.size()}, x.begin(), x.end());
+    matlab::data::Array y_arr = f.createArray({y.size()}, y.begin(), y.end());
+    matlab::data::Array z_arr = f.createArray({z.size()}, z.begin(), z.end());
+
+    matlab::data::Array xp_arr = f.createArray({xp.size()}, xp.begin(), xp.end());
+    matlab::data::Array yp_arr = f.createArray({yp.size()}, yp.begin(), yp.end());
+    matlab::data::Array zp_arr = f.createArray({zp.size()}, zp.begin(), zp.end());
+
+    mlp->setVariable(u"x", std::move(x_arr));
+    mlp->setVariable(u"y", std::move(y_arr));
+    mlp->setVariable(u"z", std::move(z_arr));
+
+    mlp->setVariable(u"xp", std::move(xp_arr));
+    mlp->setVariable(u"yp", std::move(yp_arr));
+    mlp->setVariable(u"zp", std::move(zp_arr));
+
+    mlp->eval(u"figure;");
+    mlp->eval(u"p = plot3(x,y,z, '.','Color', 'r');");
+    mlp->eval(u"hold on;");
+
+    mlp->eval(u"q = plot3(xp,yp,zp, '-', 'Color', 'b');");
+
+    mlp->eval(u"view(30,-15);");
+    mlp->eval(u"axis tight");
+    mlp->eval(u"camlight");
+    mlp->eval(u"lighting gouraud");
+    mlp->eval(u"saveas(gcf,'viz.png')");
+    //Pause to display the figure
+    mlp->eval(u"pause(5)");
+}
 // class Sinewave
 // {
 // public:
@@ -64,7 +134,7 @@ using namespace octomap;
 //     // Uses the Matlab Engine API for C++ to invoke Matlab's plot command and open a figure window
 //     void PlotInMatlab()
 //     {
-//         std::unique_ptr<matlab::engine::MATLABEngine> MLPtr = matlab::engine::startMATLAB();
+//         std::unique_ptr<matlab::engine::MATLABEngine> mlp = matlab::engine::startMATLAB();
 //         matlab::data::ArrayFactory factory;
 //         // Create arguments for the call to Matlab's plot function
 //         std::vector<matlab::data::Array> args({factory.createArray({xvals.size(), 1}, xvals.begin(), xvals.end()),
@@ -72,15 +142,15 @@ using namespace octomap;
 //                                                factory.createCharArray(std::string("ro"))});
 //         // Invoke the plot command
 //         size_t numArguments(1);
-//         std::vector<matlab::data::Array> figureHandle = MLPtr->feval(u"figure", numArguments, {});
-//         MLPtr->feval(u"plot", args);
-//         MLPtr->eval(u"saveas(gcf,'sine.png')");
+//         std::vector<matlab::data::Array> figureHandle = mlp->feval(u"figure", numArguments, {});
+//         mlp->feval(u"plot", args);
+//         mlp->eval(u"saveas(gcf,'sine.png')");
 //         // Pause to display the figure
-//         // MLPtr->eval(u"pause(5)");
+//         // mlp->eval(u"pause(5)");
 
 //         // // Set the Color property to red
-//         // MLPtr->setProperty(figureHandle[0], u"Color", factory.createCharArray("red"));
-//         // MLPtr->eval(u"pause(10)");
+//         // mlp->setProperty(figureHandle[0], u"Color", factory.createCharArray("red"));
+//         // mlp->eval(u"pause(10)");
 //     }
 // };
 // /* Returns multiples of Ts, the sampling period in seconds, beginning at tStart. */

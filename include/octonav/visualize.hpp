@@ -1,5 +1,6 @@
 #pragma once
 #include "OctoGraph.hpp"
+#include <vector>
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 
@@ -7,17 +8,17 @@
  * @brief The data structure that describe the nodes of a OctoGraph.
  * 
  */
+
+static std::vector<OctoNode> EMPTY_VEC = std::vector<OctoNode>();
+// std::vector<int> EMPTY_VEC = std::vector<int>();
 class Visualizer
 {
 public:
     /**
      * @brief Construct a new Visualizer object
      * 
-     * @param key A unique key indentifying the node. Make sure you call makeKeyUnique.
-     * @param depth The depth of the node. The tree's root is at depth zero.
+     * @param graph OctoGraph
+     * @param path List of OctoNodes
      */
-    Visualizer(OctoGraph &graph) : graph(graph){};
-
-private:
-    OctoGraph &graph;
+    void visualize(const OctoGraph &graph, const std::vector<OctoNode> &path = EMPTY_VEC);
 };

@@ -31,8 +31,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 #include "octonav/visualize.hpp"
-#include <octomap/octomap.h>
-#include <octomap/OcTree.h>
+// #include "octonav/OctoGraph.hpp"
+// #include "octonav/a_star.hpp"
+// #include <octomap/octomap.h>
+// #include <octomap/OcTree.h>
 
 using namespace std;
 using namespace octomap;
@@ -86,23 +88,32 @@ int main(int /*argc*/, char ** /*argv*/)
   cout << endl;
   cout << "performing some queries:" << endl;
 
-  point3d query(0., 0., 0.);
-  OcTreeNode *result = tree.search(query);
-  print_query_info(query, result);
+  // point3d query(0., 0., 0.);
+  // OcTreeNode *result = tree.search(query);
+  // print_query_info(query, result);
 
-  query = point3d(-1., -1., -1.);
-  result = tree.search(query);
-  print_query_info(query, result);
+  // query = point3d(-1., -1., -1.);
+  // result = tree.search(query);
+  // print_query_info(query, result);
 
-  query = point3d(1., 1., 1.);
-  result = tree.search(query);
-  print_query_info(query, result);
+  // query = point3d(1., 1., 1.);
+  // result = tree.search(query);
+  // print_query_info(query, result);
 
-  cout << endl;
-  tree.writeBinary("simple_tree.bt");
-  cout << "wrote example file simple_tree.bt" << endl
-       << endl;
-  cout << "now you can use octovis to visualize: octovis simple_tree.bt" << endl;
-  cout << "Hint: hit 'F'-key in viewer to see the freespace" << endl
-       << endl;
+  // cout << endl;
+  // tree.writeBinary("simple_tree.bt");
+
+  vector<OctoNode> path;
+  auto it = tree.begin();
+  path.push_back(OctoNode(it.getIndexKey(), 0));
+  ++it;
+  path.push_back(OctoNode(it.getIndexKey(), 0));
+  Visualizer viz;
+  OctoGraphGrid graph = OctoGraphGrid(tree);
+  viz.visualize(graph, path);
+  // cout << "wrote example file simple_tree.bt" << endl
+  //      << endl;
+  // cout << "now you can use octovis to visualize: octovis simple_tree.bt" << endl;
+  // cout << "Hint: hit 'F'-key in viewer to see the freespace" << endl
+  //      << endl;
 }
