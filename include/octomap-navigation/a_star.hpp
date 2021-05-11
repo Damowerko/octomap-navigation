@@ -1,35 +1,30 @@
+#pragma once
 #include <vector>
 #include <tuple>
 #include <array>
 #include <queue>
-#include <octomap/octomap.h>
-#include <octomap/OcTree.h>
 
-template<class T>
-class Graph {
+class Node {
 public:
-    virtual std::vector<T> neighbors(T node);
-    virtual float cost(T node1, T node2);
+    void set_f_score() {
+        f_score = f_score + g_score;
+    }
+
+    Node& parent;
+    float f_score, g_score, h_score = numeric_limits<float>::infinity();
 };
 
-typedef std::array<size_t, 3> coordinate;
-
-class GridGraph : Graph<coordinate> {
+template <class T>
+class Graph
+{
 public:
-    GridGraph(coordinate size, std::vector<bool> data) : size(size), data(data) {}
-
-    std::vector<coordinate> neighbors(coordinate node){
-        // TODO: Implement        
-    }
-private:
-    coordinate size;
-    std::vector<bool> data;
+    virtual std::vector<T> neighbors(const T& node);
 };
 
 /**
  * @brief 
  */
-template<class T>
-float a_star (Graph<T> graph, T start, T end, float (*function)(T,T) heuristic) {
+template <class T>
+float a_star(Graph<T> graph, T start, T end, float (*heuristic)(T, T)){
     // TODO: implement
 };
