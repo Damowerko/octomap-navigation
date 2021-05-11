@@ -4,7 +4,7 @@ find_package(Matlab REQUIRED ENG_LIBRARY MAT_LIBRARY)
 # Octonav
 add_library(octonav 
     OctoGraph.cpp
-    a_star_generic.cpp
+    a_star.cpp
     ../include/octonav/a_star.hpp
     ../include/octonav/GridGraph.hpp
     ../include/octonav/OctoGraph.hpp
