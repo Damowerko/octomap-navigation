@@ -1,5 +1,6 @@
 find_package(octomap REQUIRED)
 find_package(Matlab REQUIRED ENG_LIBRARY MAT_LIBRARY)
+find_package(Threads REQUIRED)
 
 # The octomap-navigation library
 file(GLOB OCTOMAP_NAVIGATION_HEADERS CONFIGURE_DEPENDS
