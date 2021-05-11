@@ -1,27 +1,12 @@
 #include "octonav/visualize.hpp"
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
-#include <string>
-#include <algorithm>
-#include <cmath>
-#include <numeric>
 #include "MatlabEngine.hpp"
 #include "MatlabDataArray.hpp"
 
-// #include <octomap/octomap.h>
-// #include <octomap/OcTree.h>
-
-using std::cout;
-using std::ios_base;
-using std::ofstream;
-using std::string;
 using std::vector;
-
 using namespace octomap;
 
-void Visualizer::visualize(const OctoGraph &graph, const std::vector<OctoNode> &path)
+void visualize(const OctoGraph &graph, const vector<OctoNode> &path)
 {
 
     vector<double> x;
@@ -65,29 +50,36 @@ void Visualizer::visualize(const OctoGraph &graph, const std::vector<OctoNode> &
     matlab::data::Array y_arr = f.createArray({y.size()}, y.begin(), y.end());
     matlab::data::Array z_arr = f.createArray({z.size()}, z.begin(), z.end());
 
-    matlab::data::Array xp_arr = f.createArray({xp.size()}, xp.begin(), xp.end());
-    matlab::data::Array yp_arr = f.createArray({yp.size()}, yp.begin(), yp.end());
-    matlab::data::Array zp_arr = f.createArray({zp.size()}, zp.begin(), zp.end());
-
     mlp->setVariable(u"x", std::move(x_arr));
     mlp->setVariable(u"y", std::move(y_arr));
     mlp->setVariable(u"z", std::move(z_arr));
 
-    mlp->setVariable(u"xp", std::move(xp_arr));
-    mlp->setVariable(u"yp", std::move(yp_arr));
-    mlp->setVariable(u"zp", std::move(zp_arr));
-
     mlp->eval(u"figure;");
     mlp->eval(u"p = plot3(x,y,z, '.','Color', 'r');");
-    mlp->eval(u"hold on;");
 
-    mlp->eval(u"q = plot3(xp,yp,zp, '-', 'Color', 'b');");
+    if (xp.size() > 0)
+    {
+        mlp->eval(u"hold on;");
+        matlab::data::Array xp_arr = f.createArray({xp.size()}, xp.begin(), xp.end());
+        matlab::data::Array yp_arr = f.createArray({yp.size()}, yp.begin(), yp.end());
+        matlab::data::Array zp_arr = f.createArray({zp.size()}, zp.begin(), zp.end());
+
+        mlp->setVariable(u"xp", std::move(xp_arr));
+        mlp->setVariable(u"yp", std::move(yp_arr));
+        mlp->setVariable(u"zp", std::move(zp_arr));
+        mlp->eval(u"q = plot3(xp,yp,zp, '-', 'Color', 'b');");
+        mlp->eval(u"legend('Point Cloud','Optimal Path');");
+    }
+    else
+    {
+        mlp->eval(u"legend('Point Cloud');");
+    }
 
     mlp->eval(u"view(30,-15);");
     mlp->eval(u"axis tight");
     mlp->eval(u"camlight");
     mlp->eval(u"lighting gouraud");
-    mlp->eval(u"saveas(gcf,'viz.png')");
+    mlp->eval(u"saveas(gcf,'../results/viz.png')");
     //Pause to display the figure
     mlp->eval(u"pause(5)");
 }

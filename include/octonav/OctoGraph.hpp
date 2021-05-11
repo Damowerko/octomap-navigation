@@ -18,7 +18,6 @@ public:
      * @param key A unique key indentifying the node. Make sure you call makeKeyUnique.
      * @param depth The depth of the node. The tree's root is at depth zero.
      */
-    // OctoNode();
 
     OctoNode(octomap::OcTreeKey key, int depth) : key(key), Node(), depth(depth)
     {
