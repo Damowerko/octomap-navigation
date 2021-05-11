@@ -5,7 +5,12 @@
 
 using std::vector;
 using namespace octomap;
-
+/**
+     * @brief Visualize the point cloud from an octograph and optionally a path. PNG saved in results/
+     * 
+     * @param graph Octograph to visualize
+     * @param path Path to visualize
+     */
 void visualize(const OctoGraph &graph, const vector<OctoNode> &path)
 {
 
