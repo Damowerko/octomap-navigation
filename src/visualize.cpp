@@ -7,10 +7,10 @@
 using namespace std;
 using namespace octomap;
 
-static std::unique_ptr<matlab::engine::MATLABEngine> mlp = matlab::engine::startMATLAB();
-
 void visualize(OcTree &octree, const std::vector<point3d> &path)
 {
+    std::unique_ptr<matlab::engine::MATLABEngine> mlp = matlab::engine::startMATLAB();
+
     octree.writeBinary("./out/tmp.bt");
     mlp->eval(u"map = importOccupancyMap3D('./out/tmp.bt');");
 

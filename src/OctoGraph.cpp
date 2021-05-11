@@ -11,15 +11,17 @@ inline void changeDepth(OcTreeKey &key, int diff);
 tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth = false);
 pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const OcTreeKey &key, unsigned int depth);
 
-
-namespace std {
+namespace std
+{
     /**
      * @brief OctoNode std::hash class specialization. 
      */
-    template<>
-    class hash<OctoNode>{
+    template <>
+    class hash<OctoNode>
+    {
     public:
-        std::size_t operator()(const OctoNode& node){
+        std::size_t operator()(const OctoNode &node)
+        {
             static OcTreeKey::KeyHash keyHash;
             return keyHash(node.key) + 241 * node.depth;
         }
@@ -57,9 +59,11 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
         auto [currNode, currKey, currDepth] = getNeighborSameOrHigher(octree, node, dir, false);
         if (currNode != NULL)
         {
-            vector<tuple<OcTreeNode *, OcTreeKey, unsigned int>> queue{};
-            do
+            vector<tuple<OcTreeNode *, OcTreeKey, unsigned int>> queue{{currNode, currKey, currDepth}};
+            while (!queue.empty())
             {
+                tie(currNode, currKey, currDepth) = queue.back();
+                queue.pop_back();
                 if (!octree.nodeHasChildren(currNode))
                 {
                     if (!octree.isNodeOccupied(currNode))
@@ -88,9 +92,7 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
                         }
                     }
                 }
-                tie(currNode, currKey, currDepth) = queue.back();
-                queue.pop_back();
-            } while (!queue.empty());
+            }
         }
     }
     return neighbors;
@@ -119,7 +121,7 @@ OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth)
  * @param depth 
  * @return pair<OcTreeNode*, unsigned int> 
  */
-static pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const OctoNode &node)
+pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const OctoNode &node)
 {
     const unsigned int tree_depth = octree.getTreeDepth();
     unsigned int depth = node.depth;
@@ -241,7 +243,7 @@ tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTre
 
     OcTreeNode *octreeNode;
     unsigned int depth;
-    tie(octreeNode, depth) = searchWithDepth(octree, node);
+    tie(octreeNode, depth) = searchWithDepth(octree, OctoNode(neighbor_key, node.depth));
     if (octreeNode == NULL)
     {
         return {};
@@ -256,8 +258,7 @@ tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTre
         else
         {
             // we are coarsening the key to the desired depth
-            makeKeyUnique(neighbor_key, depth);
-            return {octreeNode, neighbor_key, depth};
+            return {octreeNode, makeKeyUnique(neighbor_key, depth), depth};
         }
     }
 }

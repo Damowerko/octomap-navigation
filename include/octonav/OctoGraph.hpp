@@ -21,15 +21,22 @@ public:
     OctoNode(octomap::OcTreeKey key, int depth) : key(key), Node(), depth(depth)
     {
         assert((key == makeKeyUnique(key, depth)));
-    };
+    }
 
     bool operator==(const OctoNode& other) const {
         return key == other.key && depth == other.depth;
-    };
+    }
+
+    friend std::ostream& operator<<(std::ostream &out, OctoNode node) {
+        out << "{Key: [" << node.key[0] << "," << node.key[1] << "," << node.key[2] << "], Depth: " << node.depth << "}";
+        return out;
+    }
 
     octomap::OcTreeKey key;
     int depth;
 };
+
+std::pair<octomap::OcTreeNode *, unsigned int> searchWithDepth(const octomap::OcTree &octree, const OctoNode &node);
 
 class OctoGraph : public Graph<OctoNode>
 {
@@ -62,3 +69,4 @@ public:
 private:
     OctoGraphGrid graphGrid;
 };
+
