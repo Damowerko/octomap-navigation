@@ -1,4 +1,3 @@
-#pragma once
 #include <vector>
 #include <tuple>
 #include <array>
@@ -11,7 +10,7 @@ public:
     }
 
     Node& parent;
-    float f_score, g_score, h_score = numeric_limits<float>::infinity();
+    float f_score, g_score, h_score = std::numeric_limits<float>::infinity();
 };
 
 template <class T>

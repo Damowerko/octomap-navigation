@@ -1,10 +1,9 @@
 #pragma once
 #include "a_star.hpp"
-#include "GridGraph.hpp"
 #include <octomap/octomap.h>
 #include <octomap/OcTree.h>
 
-inline octomap::OcTreeKey makeKeyUnique(const octomap::OcTreeKey &key, unsigned int level);
+inline octomap::OcTreeKey& makeKeyUnique(octomap::OcTreeKey &key, unsigned int level);
 
 /**
  * @brief The data structure that describe the nodes of a OctoGraph.
