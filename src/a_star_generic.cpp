@@ -106,6 +106,7 @@ vector<Node*> A_star_base::find_path(Node* start, Node* goal) {
                 // Store this path to neighbor as it is better than previously stored path.
                 neighbor->parent = current;
                 neighbor->g_score = tentative_g_score;
+                neighbor->h_score = this->compute_h_score(neighbor, goal);
                 neighbor->set_f_score();
                 
                 // Add neighbor to Open List if it's not already there.
