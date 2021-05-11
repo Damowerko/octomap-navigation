@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <iostream>
 #include <limits>
+#include <math.h>
 #include <unordered_set>
 #include <vector>
 #include <queue>
@@ -49,10 +50,17 @@ public:
     vector<Node*> find_path(Node* start, Node* goal);
     
     // Computes h(current)
-    virtual float compute_h_score(Node* current, Node* goal)=0;
+    virtual float compute_h_score(Node* current, Node* goal);
     
     // Builds path from start to current node.
     vector<Node*> reconstruct_path(Node* current);
+};
+
+float A_star_base::compute_h_score(Node* current, Node* goal) {
+    // L2 norm as cost to goal heuristic.
+    float l2_sq = pow(current->x - goal->x, 2.0) + pow(current->y - goal->y, 2.0)
+                    + pow(current->z - goal->z, 2.0);
+    return sqrt(l2_sq);
 };
 
 vector<Node*> A_star_base::reconstruct_path(Node* current) {
