@@ -1,4 +1,4 @@
-#include "OctoGraph.hpp"
+#include "octonav/OctoGraph.hpp"
 #include <optional>
 
 using namespace std;
@@ -17,7 +17,7 @@ vector<OctoNode> OctoGraphGrid::neighbors(const OctoNode &node)
         auto [octreeNode, key, depth] = getNeighborSameOrHigher(octree, node, dir, true);
         if (octreeNode != NULL && !octree.isNodeOccupied(octreeNode))
         {
-            neighbors.push_back({key, depth});
+            neighbors.push_back(OctoNode(key, depth));
         }
     }
     return neighbors;
@@ -48,7 +48,7 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
                     if (!octree.isNodeOccupied(currNode))
                     {
                         // node is free, add it to neighbors
-                        neighbors.push_back({currKey, currDepth});
+                        neighbors.push_back(OctoNode(currKey, currDepth));
                     }
                 }
                 else
@@ -58,14 +58,14 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
                     {
                         unsigned char childIdx = childLUT[dir][i];
                         OcTreeKey childKey;
-                        computeChildKey(childIdx, (1 << (15 - currDepth)), childKey);
+                        computeChildKey(childIdx, (1 << (15 - currDepth)), currKey, childKey);
                         if (octree.nodeChildExists(currNode, childIdx))
                         {
                             OcTreeNode* childNode = octree.getNodeChild(currNode, childIdx);
-                            queue.push_back({childNode, childKey, currDepth+1})                
+                            queue.push_back({childNode, childKey, currDepth+1});       
                         } else {
-                            // child does not exist and therefore is free
-                            neighbors.push_back({childKey, currDepth+1})
+                            // child does not exist and therefore we will assume is free
+                            neighbors.push_back(OctoNode(childKey, currDepth+1));
                         }
                     }
                 }
@@ -77,7 +77,7 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
     return neighbors;
 };
 
-inline void makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth)
+inline OcTreeKey& makeKeyUnique(OcTreeKey& key, unsigned int depth)
 {
     unsigned int level = 16 - depth;
     if (level != 0)
@@ -88,6 +88,7 @@ inline void makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth)
         key[1] &= ~mask;
         key[2] &= ~mask;
     }
+    return key;
 }
 
 /**
@@ -166,7 +167,7 @@ inline void changeDepth(OcTreeKey &key, int diff)
  * @param key The key to be shifted. 
  * @param dir A 0-5 index of the faces of a cube. The least significant bit is the sign + or -.
  * The next two significant bits indicate the cooridnate, x=0 y=1 z=3. 
- * @return bool Return false if key would wraparound.
+ * @return bool Return true on success. Return false if key would wraparound.
  */
 inline bool shiftKey(OcTreeKey &key, unsigned char dir)
 {
@@ -194,6 +195,7 @@ inline bool shiftKey(OcTreeKey &key, unsigned char dir)
             key[i]--;
         }
     }
+    return true;
 }
 
 /**
@@ -205,7 +207,7 @@ inline bool shiftKey(OcTreeKey &key, unsigned char dir)
  * @param keepDepth Should we keep the depth of the input or coarsen if the depth of the found node is higher.
  * @return tuple<OcTreeNode*, OcTreeKey, unsigned int> Tuple of node, key and depth.
  */
-tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth = false)
+tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth)
 {
     int diff = 16 - node.depth;
     OcTreeKey neighbor_key = node.key;
