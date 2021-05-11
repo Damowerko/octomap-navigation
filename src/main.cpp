@@ -37,4 +37,5 @@ int main()
     }
 
     visualize(tree);
+    cin.get();
 }

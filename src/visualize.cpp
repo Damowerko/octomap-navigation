@@ -1,24 +1,10 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 #include <vector>
-#include <string>
-#include <algorithm>
-#include <cmath>
-#include <numeric>
-#include "octonav/visualize.hpp"
 #include "MatlabEngine.hpp"
 #include "MatlabDataArray.hpp"
+#include "octonav/visualize.hpp"
 
-// #include <octomap/octomap.h>
-// #include <octomap/OcTree.h>
-
-using std::cout;
-using std::ios_base;
-using std::ofstream;
-using std::string;
-using std::vector;
-
+using namespace std;
 using namespace octomap;
 
 void visualize(const OcTree &octree, const std::vector<point3d> &path)
@@ -87,4 +73,7 @@ void visualize(const OcTree &octree, const std::vector<point3d> &path)
     mlp->eval(u"camlight");
     mlp->eval(u"lighting gouraud");
     mlp->eval(u"saveas(gcf,'viz.png')");
+
+    cout << "Press any key to continue..." << endl;
+    cin.get();
 }
