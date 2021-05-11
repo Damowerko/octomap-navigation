@@ -4,6 +4,8 @@
 using namespace std;
 using namespace octomap;
 
+// template class OctoGraph<OctoNode>;
+
 inline bool shiftKey(OcTreeKey &key, unsigned char dir);
 inline void changeDepth(OcTreeKey &key, int diff);
 tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth = false);
@@ -61,11 +63,13 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
                         computeChildKey(childIdx, (1 << (15 - currDepth)), currKey, childKey);
                         if (octree.nodeChildExists(currNode, childIdx))
                         {
-                            OcTreeNode* childNode = octree.getNodeChild(currNode, childIdx);
-                            queue.push_back({childNode, childKey, currDepth+1});       
-                        } else {
+                            OcTreeNode *childNode = octree.getNodeChild(currNode, childIdx);
+                            queue.push_back({childNode, childKey, currDepth + 1});
+                        }
+                        else
+                        {
                             // child does not exist and therefore we will assume is free
-                            neighbors.push_back(OctoNode(childKey, currDepth+1));
+                            neighbors.push_back(OctoNode(childKey, currDepth + 1));
                         }
                     }
                 }
@@ -77,7 +81,7 @@ vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
     return neighbors;
 };
 
-inline OcTreeKey& makeKeyUnique(OcTreeKey& key, unsigned int depth)
+inline OcTreeKey &makeKeyUnique(OcTreeKey &key, unsigned int depth)
 {
     unsigned int level = 16 - depth;
     if (level != 0)
