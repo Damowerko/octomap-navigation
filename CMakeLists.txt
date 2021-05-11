@@ -10,7 +10,16 @@ project(octomap-navigation
 )
 
 find_package(octomap CONFIG REQUIRED)
+find_package(Matlab REQUIRED)
 
+
+
+add_executable(visualize src/visualize.cpp)
 add_executable(simple_example src/simple_example.cpp)
+
 target_link_libraries(simple_example PRIVATE octomap)
+target_link_libraries(visualize PRIVATE ${Matlab_ROOT_DIR}/extern/bin/maci64/libMatlabEngine.dylib)
+target_link_libraries(visualize PRIVATE ${Matlab_ROOT_DIR}/extern/bin/maci64/libMatlabDataArray.dylib)
+
 target_include_directories(simple_example PRIVATE octomap)
+target_include_directories(visualize PRIVATE "${Matlab_ROOT_DIR}/extern/include")
