@@ -1,4 +1,6 @@
 find_package(octomap REQUIRED)
+set(Matlab_ROOT_DIR /usr/local/MATLAB/R2021a/)
+find_package(Matlab REQUIRED ENG_LIBRARY MAT_LIBRARY)
 
 # Example provided by octomap devs
 add_executable(simple_example simple_example.cpp)
@@ -16,5 +18,11 @@ add_library(octonav
 target_include_directories(octonav PUBLIC 
     ../include/
 )
-target_link_libraries(octonav PRIVATE octomap)
+target_link_libraries(octonav PUBLIC octomap)
 target_compile_features(octonav PUBLIC cxx_std_17)
+
+# Matlab
+add_executable(matlab_example matlab_example.cpp)
+message(${Matlab_LIBRARIES})
+target_link_libraries(matlab_example PRIVATE ${Matlab_LIBRARIES})
+target_include_directories(matlab_example PRIVATE ${Matlab_INCLUDE_DIRS})

@@ -9,7 +9,7 @@ inline octomap::OcTreeKey& makeKeyUnique(octomap::OcTreeKey &key, unsigned int l
  * @brief The data structure that describe the nodes of a OctoGraph.
  * 
  */
-class OctoNode
+class OctoNode : Node
 {
 public:
     /**
@@ -18,7 +18,7 @@ public:
      * @param key A unique key indentifying the node. Make sure you call makeKeyUnique.
      * @param depth The depth of the node. The tree's root is at depth zero.
      */
-    OctoNode(octomap::OcTreeKey key, int depth) : key(key), depth(depth)
+    OctoNode(octomap::OcTreeKey key, int depth) : key(key), Node(), depth(depth)
     {
         assert((key == makeKeyUnique(key, depth)));
     }
