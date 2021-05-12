@@ -11,32 +11,27 @@ inline void changeDepth(OcTreeKey &key, int diff);
 tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTree &octree, const OctoNode &node, unsigned char dir, bool keepDepth = false);
 pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const OcTreeKey &key, unsigned int depth);
 
-namespace std
+// Computes h(current)
+template <>
+float heuristic(shared_ptr<OctoNode> current, shared_ptr<OctoNode> goal)
 {
-    /**
-     * @brief OctoNode std::hash class specialization. 
-     */
-    template <>
-    class hash<OctoNode>
+    float sum = 0;
+    for (int i = 0; i < 3; i++)
     {
-    public:
-        std::size_t operator()(const OctoNode &node)
-        {
-            static OcTreeKey::KeyHash keyHash;
-            return keyHash(node.key) + 241 * node.depth;
-        }
-    };
+        sum += pow(current->key[i] - goal->key[i], 2);
+    }
+    return sum;
 }
 
-vector<OctoNode> OctoGraphGrid::neighbors(const OctoNode &node)
+vector<shared_ptr<OctoNode>> OctoGraphGrid::neighbors(const OctoNode &node)
 {
-    vector<OctoNode> neighbors;
+    vector<shared_ptr<OctoNode>> neighbors;
     for (int dir = 0; dir < 6; dir++)
     {
         auto [octreeNode, key, depth] = getNeighborSameOrHigher(octree, node, dir, true);
-        if (octreeNode != NULL && !octree.isNodeOccupied(octreeNode))
+        if (octreeNode == NULL || !octree.isNodeOccupied(octreeNode))
         {
-            neighbors.push_back(OctoNode(key, depth));
+            neighbors.push_back(make_shared<OctoNode>(key, depth));
         }
     }
     return neighbors;
@@ -51,46 +46,44 @@ unsigned char childLUT[6][4] = {
     {0b100, 0b101, 0b110, 0b111}, // z+
 };
 
-vector<OctoNode> OctoGraphSparse::neighbors(const OctoNode &node)
+vector<shared_ptr<OctoNode>> OctoGraphSparse::neighbors(const OctoNode &node)
 {
-    vector<OctoNode> neighbors;
+    vector<shared_ptr<OctoNode>> neighbors;
     for (int dir = 0; dir < 6; dir++)
     {
         auto [currNode, currKey, currDepth] = getNeighborSameOrHigher(octree, node, dir, false);
-        if (currNode != NULL)
+        if(currNode == NULL){
+            tie(currNode, currKey, currDepth) = getNeighborSameOrHigher(octree, node, dir, true);
+            neighbors.push_back(make_shared<OctoNode>(currKey, node.depth));
+            continue;
+        }
+        vector<tuple<OcTreeNode *, OcTreeKey, unsigned int>> queue{{currNode, currKey, currDepth}};
+        while (!queue.empty())
         {
-            vector<tuple<OcTreeNode *, OcTreeKey, unsigned int>> queue{{currNode, currKey, currDepth}};
-            while (!queue.empty())
+            tie(currNode, currKey, currDepth) = queue.back();
+            queue.pop_back();
+            if (currNode == NULL)
             {
-                tie(currNode, currKey, currDepth) = queue.back();
-                queue.pop_back();
-                if (!octree.nodeHasChildren(currNode))
+                neighbors.push_back(make_shared<OctoNode>(currKey, currDepth));
+            }
+            else if (!octree.nodeHasChildren(currNode))
+            {
+                if (!octree.isNodeOccupied(currNode))
                 {
-                    if (!octree.isNodeOccupied(currNode))
-                    {
-                        // node is free, add it to neighbors
-                        neighbors.push_back(OctoNode(currKey, currDepth));
-                    }
+                    // node is free, add it to neighbors
+                    neighbors.push_back(make_shared<OctoNode>(currKey, currDepth));
                 }
-                else
+            }
+            else
+            {
+                // explore the children
+                for (int i = 0; i < 4; i++)
                 {
-                    // explore the children
-                    for (int i = 0; i < 4; i++)
-                    {
-                        unsigned char childIdx = childLUT[dir][i];
-                        OcTreeKey childKey;
-                        computeChildKey(childIdx, (1 << (15 - currDepth)), currKey, childKey);
-                        if (octree.nodeChildExists(currNode, childIdx))
-                        {
-                            OcTreeNode *childNode = octree.getNodeChild(currNode, childIdx);
-                            queue.push_back({childNode, childKey, currDepth + 1});
-                        }
-                        else
-                        {
-                            // child does not exist and therefore we will assume is free
-                            neighbors.push_back(OctoNode(childKey, currDepth + 1));
-                        }
-                    }
+                    unsigned char childIdx = childLUT[dir][i];
+                    OcTreeKey childKey;
+                    computeChildKey(childIdx, (1 << (15 - currDepth)), currKey, childKey);
+                    OcTreeNode *childNode = octree.getNodeChild(currNode, childIdx);
+                    queue.push_back({childNode, childKey, currDepth + 1});
                 }
             }
         }
@@ -155,7 +148,7 @@ pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const Oct
             // is the current node a leaf already?
             if (!octree.nodeHasChildren(curNode))
             { // TODO similar check to nodeChildExists?
-                return {curNode, i - tree_depth + 1};
+                return {curNode, tree_depth - i};
             }
             else
             {
@@ -246,7 +239,7 @@ tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTre
     tie(octreeNode, depth) = searchWithDepth(octree, OctoNode(neighbor_key, node.depth));
     if (octreeNode == NULL)
     {
-        return {};
+        return {NULL, neighbor_key, node.depth};
     }
     else
     {
@@ -261,4 +254,18 @@ tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTre
             return {octreeNode, makeKeyUnique(neighbor_key, depth), depth};
         }
     }
+}
+
+OctoNode coordToNode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth)
+{
+    OctoNode node(tree.coordToKey(coordinate), 0);
+    auto [octreeNode, searchDepth] = searchWithDepth(tree, node);
+    assert(octreeNode != NULL || !tree.isNodeOccupied(octreeNode));
+    node.depth = searchDepth;
+    if(depth > 0)
+    {
+        node.depth = depth;
+    }
+    node.key = makeKeyUnique(node.key, depth);
+    return node;
 }

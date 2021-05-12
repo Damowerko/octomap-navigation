@@ -1,41 +1,50 @@
 #include <vector>
+#include <chrono>
 #include "octonav/visualize.hpp"
+#include "octonav/a_star.hpp"
+#include "octonav/OctoGraph.hpp"
 
 using namespace std;
 using namespace octomap;
 
 int main()
 {
-    OcTree tree(0.1); // create empty tree with resolution 0.1
+    OcTree fr78(0.05);
+    fr78.readBinary("/home/damow/octomap-navigation/maps/fr_078_tidyup.bt");
 
-    // insert some measurements of occupied cells
+    point3d start_point(-4, 0, 0.4);
+    point3d end_point(-5.5, -2, 0.4);
 
-    for (int x = -20; x < 20; x++)
-    {
-        for (int y = -20; y < 20; y++)
-        {
-            for (int z = -20; z < 20; z++)
-            {
-                point3d endpoint((float)x * 0.05f, (float)y * 0.05f, (float)z * 0.05f);
-                tree.updateNode(endpoint, true); // integrate 'occupied' measurement
-            }
-        }
+    OctoGraphGrid grid(fr78);
+    OctoGraphSparse sparse(fr78);
+
+    cout << "Finding path" << endl;
+
+    auto t0 = chrono::high_resolution_clock::now();
+    vector<shared_ptr<OctoNode>> grid_nodes = find_path<OctoNode>(grid, coordToNode(fr78, start_point, 16), coordToNode(fr78, end_point, 16));
+    auto t1 = chrono::high_resolution_clock::now();
+    vector<shared_ptr<OctoNode>> sparse_nodes = find_path<OctoNode>(sparse, coordToNode(fr78, start_point), coordToNode(fr78, end_point));
+    auto t2 = chrono::high_resolution_clock::now();
+
+    vector<point3d> grid_path, sparse_path;
+    for(auto node : grid_nodes){
+        grid_path.push_back(fr78.keyToCoord(node->key, node->depth));
+    }
+    for(auto node : sparse_nodes){
+        sparse_path.push_back(fr78.keyToCoord(node->key, node->depth));
     }
 
-    // insert some measurements of free cells
+    float distance = (start_point - end_point).norm();
+    chrono::duration<double, milli> grid_time = t1 - t0;
+    chrono::duration<double, milli> sparse_time = t2 - t1;
 
-    for (int x = -30; x < 30; x++)
-    {
-        for (int y = -30; y < 30; y++)
-        {
-            for (int z = -30; z < 30; z++)
-            {
-                point3d endpoint((float)x * 0.02f - 1.0f, (float)y * 0.02f - 1.0f, (float)z * 0.02f - 1.0f);
-                tree.updateNode(endpoint, false); // integrate 'free' measurement
-            }
-        }
-    }
+    cout << "Distance: " << distance << endl;
+    cout << "Grid Time: " << grid_time.count() << endl;
+    cout << "Grid Len: " << grid_path.size() << endl;
+    cout << "Sparse Time: " << sparse_time.count() << endl;
+    cout << "Sparse Len: " << sparse_path.size() << endl;
 
-    visualize(tree);
-    //cin.get();
+    visualize(fr78, grid_path, sparse_path);
+    cout << "Press any key to continue..." << endl;
+    cin.get();
 }

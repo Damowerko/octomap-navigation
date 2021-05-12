@@ -9,4 +9,4 @@
  * @param octree 
  * @param path 
  */
-void visualize(octomap::OcTree &octree, const std::vector<octomap::point3d> &path = std::vector<octomap::point3d>());
+void visualize(octomap::OcTree &octree, const std::vector<octomap::point3d> &path1, const std::vector<octomap::point3d> &path2);

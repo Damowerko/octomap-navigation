@@ -9,7 +9,7 @@ octomap::OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth);
  * @brief The data structure that describe the nodes of a OctoGraph.
  * 
  */
-class OctoNode : Node
+class OctoNode : public Node
 {
 public:
     /**
@@ -20,14 +20,18 @@ public:
      */
     OctoNode(octomap::OcTreeKey key, int depth) : key(key), Node(), depth(depth)
     {
+        assert(depth >= 0);
+        assert(depth <= 16);
         assert((key == makeKeyUnique(key, depth)));
     }
 
-    bool operator==(const OctoNode& other) const {
+    bool operator==(const OctoNode &other) const
+    {
         return key == other.key && depth == other.depth;
     }
 
-    friend std::ostream& operator<<(std::ostream &out, OctoNode node) {
+    friend std::ostream &operator<<(std::ostream &out, OctoNode node)
+    {
         out << "{Key: [" << node.key[0] << "," << node.key[1] << "," << node.key[2] << "], Depth: " << node.depth << "}";
         return out;
     }
@@ -36,12 +40,28 @@ public:
     int depth;
 };
 
+/**
+ * @brief OctoNode std::hash class specialization. 
+ */
+template <>
+class std::hash<OctoNode>
+{
+public:
+    std::size_t operator()(const OctoNode &node) const
+    {
+        static octomap::OcTreeKey::KeyHash keyHash;
+        return keyHash(node.key) + 241 * node.depth;
+    }
+};
+
 std::pair<octomap::OcTreeNode *, unsigned int> searchWithDepth(const octomap::OcTree &octree, const OctoNode &node);
 
 class OctoGraph : public Graph<OctoNode>
 {
 public:
     OctoGraph(octomap::OcTree &octree) : octree(octree){};
+
+protected:
     octomap::OcTree &octree;
 };
 
@@ -53,7 +73,7 @@ class OctoGraphGrid : public OctoGraph
 {
 public:
     using OctoGraph::OctoGraph;
-    std::vector<OctoNode> neighbors(const OctoNode &node);
+    std::vector<std::shared_ptr<OctoNode>> neighbors(const OctoNode &node);
 };
 
 /**
@@ -63,10 +83,16 @@ public:
 class OctoGraphSparse : public OctoGraph
 {
 public:
-    OctoGraphSparse(octomap::OcTree &octree) : OctoGraph(octree), graphGrid(octree){};
-    std::vector<OctoNode> neighbors(const OctoNode &node);
-
-private:
-    OctoGraphGrid graphGrid;
+    using OctoGraph::OctoGraph;
+    std::vector<std::shared_ptr<OctoNode>> neighbors(const OctoNode &node);
 };
 
+/**
+ * @brief Convertd a vector coordinate to an OctoNode. The octonode will
+ * be at the lowest possible depth. Internally uses searchWithDepth.
+ * 
+ * @param tree 
+ * @param coordinate 
+ * @return OctoNode 
+ */
+OctoNode coordToNode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth = 0);
