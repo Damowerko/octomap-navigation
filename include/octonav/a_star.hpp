@@ -18,6 +18,11 @@ public:
     float f_score = std::numeric_limits<float>::infinity();
     float g_score = std::numeric_limits<float>::infinity();
     float h_score = std::numeric_limits<float>::infinity();
+
+    virtual bool operator>(const Node &other) const
+    {
+        return f_score > other.f_score;
+    }
 };
 
 template <class T>
@@ -30,10 +35,8 @@ public:
     virtual std::vector<std::shared_ptr<T>> neighbors(const T &node) = 0;
 };
 
-bool compare(std::shared_ptr<Node> n1, std::shared_ptr<Node> n2);
-
 // Builds path from start to current node.
-template<class T>
+template <class T>
 std::vector<std::shared_ptr<T>> reconstruct_path(std::shared_ptr<T> current)
 {
     std::vector<std::shared_ptr<T>> path;
@@ -54,6 +57,7 @@ std::vector<std::shared_ptr<T>> reconstruct_path(std::shared_ptr<T> current)
 template <class T>
 std::vector<std::shared_ptr<T>> find_path(Graph<T> &graph, T start_, T goal_)
 {
+    static_assert(std::is_base_of<Node, T>::value, "T must inherit from Node.");
     auto start = std::make_shared<T>(start_);
     auto goal = std::make_shared<T>(goal_);
 
@@ -63,7 +67,9 @@ std::vector<std::shared_ptr<T>> find_path(Graph<T> &graph, T start_, T goal_)
     start->set_f_score();
 
     // Priority Queue of nodes to explore. Top element has lowest f score.
-    std::priority_queue<std::shared_ptr<T>, std::vector<std::shared_ptr<T>>, decltype(&compare)> open_list(&compare);
+    typedef std::shared_ptr<Node> ptr;
+    auto greater = [](const ptr n1, const ptr n2) { return *n1 > *n2; };
+    std::priority_queue<std::shared_ptr<T>, std::vector<std::shared_ptr<T>>, decltype(greater)> open_list(greater);
     // For time efficiency, we will use a hash set to do the .contains() lookup.
     // Nodes will be added and removed just as they are in the priority_queue.
     std::unordered_set<std::shared_ptr<T>> open_set;
@@ -86,14 +92,16 @@ std::vector<std::shared_ptr<T>> find_path(Graph<T> &graph, T start_, T goal_)
         {
             return reconstruct_path(current);
         }
-
         // Iterate through neighbors of current node.
         std::vector<std::shared_ptr<T>> curr_neighbors = graph.neighbors(*current);
         for (std::shared_ptr<T> neighbor : curr_neighbors)
         {
-            if(nodes.count(*neighbor)){
+            if (nodes.count(*neighbor))
+            {
                 neighbor = nodes[*neighbor];
-            } else {
+            }
+            else
+            {
                 nodes[*neighbor] = neighbor;
             }
             // Compute a potential new g score for neighbor if you go through the current node.

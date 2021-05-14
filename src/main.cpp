@@ -27,10 +27,12 @@ int main()
     auto t2 = chrono::high_resolution_clock::now();
 
     vector<point3d> grid_path, sparse_path;
-    for(auto node : grid_nodes){
+    for (auto node : grid_nodes)
+    {
         grid_path.push_back(fr78.keyToCoord(node->key, node->depth));
     }
-    for(auto node : sparse_nodes){
+    for (auto node : sparse_nodes)
+    {
         sparse_path.push_back(fr78.keyToCoord(node->key, node->depth));
     }
 

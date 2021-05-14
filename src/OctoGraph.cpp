@@ -52,7 +52,8 @@ vector<shared_ptr<OctoNode>> OctoGraphSparse::neighbors(const OctoNode &node)
     for (int dir = 0; dir < 6; dir++)
     {
         auto [currNode, currKey, currDepth] = getNeighborSameOrHigher(octree, node, dir, false);
-        if(currNode == NULL){
+        if (currNode == NULL)
+        {
             tie(currNode, currKey, currDepth) = getNeighborSameOrHigher(octree, node, dir, true);
             neighbors.push_back(make_shared<OctoNode>(currKey, node.depth));
             continue;
@@ -82,7 +83,7 @@ vector<shared_ptr<OctoNode>> OctoGraphSparse::neighbors(const OctoNode &node)
                     unsigned char childIdx = childLUT[dir][i];
                     OcTreeKey childKey;
                     computeChildKey(childIdx, (1 << (15 - currDepth)), currKey, childKey);
-                    OcTreeNode *childNode = octree.getNodeChild(currNode, childIdx);
+                    OcTreeNode *childNode = octree.nodeChildExists(currNode, childIdx) ? octree.getNodeChild(currNode, childIdx) : NULL;
                     queue.push_back({childNode, childKey, currDepth + 1});
                 }
             }
@@ -93,14 +94,13 @@ vector<shared_ptr<OctoNode>> OctoGraphSparse::neighbors(const OctoNode &node)
 
 OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth)
 {
-    unsigned int level = 16 - depth;
-    if (level != 0)
+    if (depth != 0)
     {
         // mask the unnecesary detail at the depth
-        uint16_t mask = 65536 << level;
-        key[0] &= ~mask;
-        key[1] &= ~mask;
-        key[2] &= ~mask;
+        uint16_t mask = ~(65535u >> depth);
+        key[0] &= mask;
+        key[1] &= mask;
+        key[2] &= mask;
     }
     return key;
 }
@@ -147,13 +147,15 @@ pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const Oct
             // we expected a child but did not get it
             // is the current node a leaf already?
             if (!octree.nodeHasChildren(curNode))
-            { // TODO similar check to nodeChildExists?
-                return {curNode, tree_depth - i};
+            {
+                // The -1 is imporant. tree_depth - i is the depth of the **child**.
+                // Subtract one to the the depth of curNode not the child.
+                return {curNode, tree_depth - i - 1};
             }
             else
             {
-                // it is not, search failed
-                return {NULL, 0};
+                // it is not, the child must be NULL
+                return {NULL, tree_depth - i};
             }
         }
     } // end for
@@ -169,9 +171,18 @@ pair<OcTreeNode *, unsigned int> searchWithDepth(const OcTree &octree, const Oct
  */
 inline void changeDepth(OcTreeKey &key, int diff)
 {
-    key[0] = key[0] >> diff;
-    key[1] = key[1] >> diff;
-    key[2] = key[2] >> diff;
+    if (diff >= 0)
+    {
+        key[0] = key[0] >> diff;
+        key[1] = key[1] >> diff;
+        key[2] = key[2] >> diff;
+    }
+    else
+    {
+        key[0] = key[0] << -diff;
+        key[1] = key[1] << -diff;
+        key[2] = key[2] << -diff;
+    }
 }
 
 /**
@@ -260,12 +271,13 @@ OctoNode coordToNode(octomap::OcTree &tree, octomap::point3d coordinate, unsigne
 {
     OctoNode node(tree.coordToKey(coordinate), 0);
     auto [octreeNode, searchDepth] = searchWithDepth(tree, node);
-    assert(octreeNode != NULL || !tree.isNodeOccupied(octreeNode));
+    assert(octreeNode == NULL || !tree.isNodeOccupied(octreeNode));
+    assert(octreeNode == NULL || !tree.nodeHasChildren(octreeNode));
     node.depth = searchDepth;
-    if(depth > 0)
+    if (depth > 0)
     {
         node.depth = depth;
     }
-    node.key = makeKeyUnique(node.key, depth);
+    node.key = makeKeyUnique(node.key, node.depth);
     return node;
 }
