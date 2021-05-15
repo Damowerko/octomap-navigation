@@ -9,7 +9,7 @@ using namespace octomap;
 TEST_CASE("Tunnel neighbors", "[graph]")
 {
     OcTree tree(1);
-    OctoGraphGrid graph(tree);
+    OctoGraphSparse graph(tree);
 
     for (int x = 0; x < 3; x++)
     {
@@ -21,7 +21,9 @@ TEST_CASE("Tunnel neighbors", "[graph]")
         tree.updateNode(point3d(x, 1, 0), false); // center is free
     }
 
-    OctoNode start = coordToNode(tree, point3d(1, 1, 0), 16);
+    optional<OctoNode> start_option = coordToEndnode(tree, point3d(1, 1, 0)).value();
+    REQUIRE(start_option.has_value());
+    OctoNode start = start_option.value();
     REQUIRE(start.depth == 16);
 
     auto n = graph.neighbors(start);

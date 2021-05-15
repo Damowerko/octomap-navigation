@@ -267,12 +267,14 @@ tuple<OcTreeNode *, OcTreeKey, unsigned int> getNeighborSameOrHigher(const OcTre
     }
 }
 
-OctoNode coordToNode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth)
+std::optional<OctoNode> coordToEndnode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth)
 {
     OctoNode node(tree.coordToKey(coordinate), 0);
     auto [octreeNode, searchDepth] = searchWithDepth(tree, node);
-    assert(octreeNode == NULL || !tree.isNodeOccupied(octreeNode));
-    assert(octreeNode == NULL || !tree.nodeHasChildren(octreeNode));
+
+    if(octreeNode != NULL && (tree.isNodeOccupied(octreeNode) || tree.nodeHasChildren(octreeNode))){
+        return {};
+    }
     node.depth = searchDepth;
     if (depth > 0)
     {

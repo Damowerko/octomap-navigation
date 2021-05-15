@@ -12,6 +12,8 @@ octomap::OcTreeKey &makeKeyUnique(octomap::OcTreeKey &key, unsigned int depth);
 class OctoNode : public Node
 {
 public:
+    OctoNode() : Node(), key(0,0,0), depth(0) {}
+
     /**
      * @brief Construct a new Octo Node object
      * 
@@ -95,4 +97,4 @@ public:
  * @param coordinate 
  * @return OctoNode 
  */
-OctoNode coordToNode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth = 0);
+std::optional<OctoNode> coordToEndnode(octomap::OcTree &tree, octomap::point3d coordinate, unsigned int depth = 0);
